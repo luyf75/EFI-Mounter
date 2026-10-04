@@ -69,4 +69,4 @@ Windows 和 Linux 版本尚未实现。
 
 ## License
 
-本项目目前尚未确定最终开源许可证。
+本项目采用 Apache License 2.0 开源。
