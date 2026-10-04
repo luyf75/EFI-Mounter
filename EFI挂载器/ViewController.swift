@@ -29,6 +29,11 @@ final class ViewController: NSViewController {
 
     private var efiList: [EFIInfo] = []
 
+    // MARK: - v1.1 自动刷新
+
+    private var autoRefreshTimer: Timer?
+    private var isRefreshing = false
+
     override func loadView() {
         view = NSView(
             frame: NSRect(
@@ -57,6 +62,69 @@ final class ViewController: NSViewController {
         refresh()
 
         print("=== AFTER REFRESH ===")
+
+        startAutoRefresh()
+        registerWorkspaceNotifications()
+    }
+
+    deinit {
+        autoRefreshTimer?.invalidate()
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+    }
+
+    private func startAutoRefresh() {
+        autoRefreshTimer?.invalidate()
+
+        autoRefreshTimer = Timer.scheduledTimer(
+            withTimeInterval: 3.0,
+            repeats: true
+        ) { [weak self] _ in
+            self?.refreshIfNeeded()
+        }
+
+        RunLoop.main.add(
+            autoRefreshTimer!,
+            forMode: .common
+        )
+    }
+
+    private func registerWorkspaceNotifications() {
+        let center = NSWorkspace.shared.notificationCenter
+
+        center.addObserver(
+            self,
+            selector: #selector(workspaceDiskChanged(_:)),
+            name: NSWorkspace.didMountNotification,
+            object: nil
+        )
+
+        center.addObserver(
+            self,
+            selector: #selector(workspaceDiskChanged(_:)),
+            name: NSWorkspace.didUnmountNotification,
+            object: nil
+        )
+
+        center.addObserver(
+            self,
+            selector: #selector(workspaceDiskChanged(_:)),
+            name: NSWorkspace.didPerformFileOperationNotification,
+            object: nil
+        )
+    }
+
+    @objc
+    private func workspaceDiskChanged(_ notification: Notification) {
+        refreshIfNeeded()
+    }
+
+    private func refreshIfNeeded() {
+        guard !isRefreshing else {
+            return
+        }
+
+        isRefreshing = true
+        refresh()
     }
 
     private func setupUI() {
@@ -228,7 +296,6 @@ final class ViewController: NSViewController {
     private func refresh() {
 
         statusLabel.stringValue = "正在扫描 EFI..."
-        mountAllButton.isEnabled = false
 
         DispatchQueue.global(qos: .userInitiated).async {
 
@@ -253,6 +320,8 @@ final class ViewController: NSViewController {
 
                 self.unmountAllButton.isEnabled =
                     hasMounted
+
+                self.isRefreshing = false
             }
         }
     }

@@ -34,3 +34,6 @@ build-universal/
 # Project documentation generated locally
 EFI挂载器_项目完整状态_*.txt
 *.doc
+
+# Additional local build snapshots
+build-*/

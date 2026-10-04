@@ -187,6 +187,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "EFI挂载器/Info.plist";
+				INFOPLIST_KEY_CFBundleExecutable = "$(EXECUTABLE_NAME)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -207,6 +208,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "EFI挂载器/Info.plist";
+				INFOPLIST_KEY_CFBundleExecutable = "$(EXECUTABLE_NAME)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

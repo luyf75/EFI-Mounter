@@ -461,19 +461,20 @@ final class EFIManager {
             return true
         }
 
-        for efi in mounted {
+        var allSuccess = true
 
+        for efi in mounted {
             let result = run([
                 "unmount",
                 efi.identifier
             ])
 
             if result.status != 0 {
-                return false
+                allSuccess = false
             }
         }
 
-        return true
+        return allSuccess
     }
 
     // MARK: - 打开 EFI
