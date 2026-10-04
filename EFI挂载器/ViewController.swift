@@ -1,0 +1,498 @@
+import Cocoa
+
+final class ViewController: NSViewController {
+
+    private let tableView = NSTableView()
+    private let scrollView = NSScrollView()
+
+    private let mountAllButton = NSButton(
+        title: "一键挂载",
+        target: nil,
+        action: nil
+    )
+
+    private let refreshButton = NSButton(
+        title: "刷新",
+        target: nil,
+        action: nil
+    )
+
+    private let unmountAllButton = NSButton(
+        title: "一键推出",
+        target: nil,
+        action: nil
+    )
+
+    private let statusLabel = NSTextField(
+        labelWithString: "正在扫描 EFI..."
+    )
+
+    private var efiList: [EFIInfo] = []
+
+    override func loadView() {
+        view = NSView(
+            frame: NSRect(
+                x: 0,
+                y: 0,
+                width: 1200,
+                height: 650
+            )
+        )
+    }
+
+    override func viewDidLoad() {
+
+        print("=== VIEW DID LOAD START ===")
+
+        super.viewDidLoad()
+
+        print("=== BEFORE SETUP UI ===")
+
+        setupUI()
+
+        print("=== AFTER SETUP UI ===")
+
+        print("=== BEFORE REFRESH ===")
+
+        refresh()
+
+        print("=== AFTER REFRESH ===")
+    }
+
+    private func setupUI() {
+
+        print("=== SETUP UI START ===")
+
+        mountAllButton.target = self
+        mountAllButton.action = #selector(mountAll)
+
+        refreshButton.target = self
+        refreshButton.action = #selector(refresh)
+
+        unmountAllButton.target = self
+        unmountAllButton.action = #selector(unmountAll)
+
+        mountAllButton.bezelStyle = .rounded
+        refreshButton.bezelStyle = .rounded
+        unmountAllButton.bezelStyle = .rounded
+
+
+        statusLabel.font = NSFont.systemFont(ofSize: 13)
+        statusLabel.textColor = .secondaryLabelColor
+
+        view.addSubview(mountAllButton)
+        view.addSubview(refreshButton)
+        view.addSubview(unmountAllButton)
+        view.addSubview(statusLabel)
+        view.addSubview(scrollView)
+
+        print("=== BEFORE SETUP TABLE ===")
+
+        setupTableView()
+
+        print("=== AFTER SETUP TABLE ===")
+
+        print("=== BEFORE CONSTRAINTS ===")
+
+        updateLayout()
+
+        print("=== AFTER CONSTRAINTS ===")
+    }
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+
+        updateLayout()
+    }
+
+    private func updateLayout() {
+
+        let width = view.bounds.width
+        let height = view.bounds.height
+
+        let topY = height - 52
+
+        mountAllButton.frame = NSRect(
+            x: 20,
+            y: topY,
+            width: 110,
+            height: 32
+        )
+
+        refreshButton.frame = NSRect(
+            x: 140,
+            y: topY,
+            width: 80,
+            height: 32
+        )
+
+        unmountAllButton.frame = NSRect(
+            x: 230,
+            y: topY,
+            width: 90,
+            height: 32
+        )
+
+        statusLabel.frame = NSRect(
+            x: 340,
+            y: topY + 5,
+            width: max(200, width - 360),
+            height: 22
+        )
+
+        scrollView.frame = NSRect(
+            x: 20,
+            y: 20,
+            width: max(600, width - 40),
+            height: max(300, height - 90)
+        )
+    }
+
+    private func setupTableView() {
+
+        let columns: [
+            (String, String, CGFloat)
+        ] = [
+            ("type", "类型", 100),
+            ("name", "磁盘名称", 180),
+            ("disk", "磁盘", 100),
+            ("efi", "ESP / EFI", 120),
+            ("size", "容量", 90),
+            ("status", "状态", 150),
+            ("action", "操作", 110)
+        ]
+
+        for item in columns {
+            let column = NSTableColumn(
+                identifier: NSUserInterfaceItemIdentifier(item.0)
+            )
+
+            column.title = item.1
+            column.width = item.2
+            column.minWidth = item.2
+
+            let headerCell = NSTableHeaderCell()
+            headerCell.stringValue = item.1
+            headerCell.alignment = .center
+
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+
+            headerCell.attributedStringValue = NSAttributedString(
+                string: item.1,
+                attributes: [
+                    .font: NSFont.boldSystemFont(
+                        ofSize: NSFont.systemFontSize + 1
+                    ),
+                    .foregroundColor: NSColor.labelColor,
+                    .paragraphStyle: paragraphStyle
+                ]
+            )
+
+            column.headerCell = headerCell
+
+            tableView.addTableColumn(column)
+        }
+
+        tableView.delegate = self
+        tableView.dataSource = self
+
+        tableView.headerView = NSTableHeaderView()
+
+        tableView.rowHeight = 36
+
+        tableView.intercellSpacing = NSSize(
+            width: 8,
+            height: 0
+        )
+
+        tableView.gridStyleMask = [
+            .solidHorizontalGridLineMask
+        ]
+
+        tableView.usesAlternatingRowBackgroundColors = true
+
+        tableView.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
+
+        scrollView.documentView = tableView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+
+        scrollView.borderType = .bezelBorder
+
+        tableView.reloadData()
+    }
+
+    @objc
+    private func refresh() {
+
+        statusLabel.stringValue = "正在扫描 EFI..."
+        mountAllButton.isEnabled = false
+
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            let list = EFIManager.shared.scanEFI()
+
+            DispatchQueue.main.async {
+
+                self.efiList = list
+                self.tableView.reloadData()
+
+                self.statusLabel.stringValue =
+                    "检测到 \(list.count) 个 EFI 分区"
+
+                let hasMounted =
+                    list.contains { $0.isMounted }
+
+                let hasUnmounted =
+                    list.contains { !$0.isMounted }
+
+                self.mountAllButton.isEnabled =
+                    hasUnmounted
+
+                self.unmountAllButton.isEnabled =
+                    hasMounted
+            }
+        }
+    }
+
+    @objc
+    private func mountAll() {
+
+        mountAllButton.isEnabled = false
+
+        let list = efiList
+
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            let paths = EFIManager.shared.mountAll(list)
+
+            DispatchQueue.main.async {
+
+                self.mountAllButton.isEnabled = true
+
+                self.refresh()
+
+                let message =
+                    paths.isEmpty
+                    ? "没有新的 EFI 被挂载。"
+                    : paths.joined(separator: "\n")
+
+                self.showAlert(
+                    title: "一键挂载完成",
+                    message: message
+                )
+            }
+        }
+    }
+
+    @objc
+    private func unmountAll() {
+
+        unmountAllButton.isEnabled = false
+
+        let list = efiList
+
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            let success =
+                EFIManager.shared.unmountAll(list)
+
+            DispatchQueue.main.async {
+
+                self.unmountAllButton.isEnabled = true
+
+                self.refresh()
+
+                self.showAlert(
+                    title: success
+                        ? "一键推出完成"
+                        : "一键推出失败",
+                    message: success
+                        ? "所有已挂载的 EFI 已推出。"
+                        : "部分 EFI 可能没有成功推出。"
+                )
+            }
+        }
+    }
+
+    private func showAlert(
+        title: String,
+        message: String
+    ) {
+
+        let alert = NSAlert()
+
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .informational
+
+        alert.addButton(withTitle: "确定")
+
+        alert.runModal()
+    }
+}
+
+extension ViewController:
+    NSTableViewDataSource,
+    NSTableViewDelegate {
+
+    func numberOfRows(
+        in tableView: NSTableView
+    ) -> Int {
+        efiList.count
+    }
+
+    func tableView(
+        _ tableView: NSTableView,
+        viewFor tableColumn: NSTableColumn?,
+        row: Int
+    ) -> NSView? {
+
+        guard row >= 0,
+              row < efiList.count
+        else {
+            return nil
+        }
+
+        let efi = efiList[row]
+
+        let identifier =
+            tableColumn?.identifier.rawValue ?? ""
+
+        if identifier == "action" {
+
+            let button = NSButton(
+                title: efi.isMounted ? "推出" : "挂载",
+                target: self,
+                action: #selector(actionButton(_:))
+            )
+
+            button.bezelStyle = .rounded
+
+            button.tag = row
+
+            return button
+        }
+
+        let cellView = NSTableCellView(
+            frame: NSRect(
+                x: 0,
+                y: 0,
+                width: tableColumn?.width ?? 100,
+                height: tableView.rowHeight
+            )
+        )
+
+        let cell = NSTextField(
+            labelWithString: ""
+        )
+
+        cell.translatesAutoresizingMaskIntoConstraints = false
+        cell.lineBreakMode = .byTruncatingTail
+        cell.maximumNumberOfLines = 1
+
+        cellView.addSubview(cell)
+
+        NSLayoutConstraint.activate([
+            cell.centerYAnchor.constraint(
+                equalTo: cellView.centerYAnchor
+            ),
+            cell.leadingAnchor.constraint(
+                equalTo: cellView.leadingAnchor,
+                constant: 4
+            ),
+            cell.trailingAnchor.constraint(
+                equalTo: cellView.trailingAnchor,
+                constant: -4
+            )
+        ])
+
+        cell.alignment = .center
+
+        switch identifier {
+
+        case "type":
+            cell.stringValue = efi.typeName
+
+        case "name":
+            cell.stringValue = efi.diskName
+            cell.alignment = .left
+
+        case "disk":
+            cell.stringValue = efi.wholeDisk
+
+        case "efi":
+            cell.stringValue = efi.identifier
+
+        case "size":
+            cell.stringValue = efi.sizeText
+
+        case "status":
+            cell.stringValue = efi.statusText
+
+        default:
+            break
+        }
+
+        if identifier == "name" {
+            cell.alignment = .left
+        }
+
+        return cellView
+    }
+
+    @objc
+    private func actionButton(
+        _ sender: NSButton
+    ) {
+
+        let row = sender.tag
+
+        guard row >= 0,
+              row < efiList.count
+        else {
+            return
+        }
+
+        let efi = efiList[row]
+
+        if efi.isMounted {
+
+            switch EFIManager.shared.unmount(efi) {
+
+            case .success:
+
+                refresh()
+
+            case .failure(let error):
+
+                showAlert(
+                    title: "EFI 推出失败",
+                    message: error.localizedDescription
+                )
+            }
+
+            return
+        }
+
+        switch EFIManager.shared.mount(efi) {
+
+        case .success(let path):
+
+            refresh()
+
+            NSWorkspace.shared.open(
+                URL(fileURLWithPath: path)
+            )
+
+        case .failure(let error):
+
+            showAlert(
+                title: "EFI 挂载失败",
+                message: error.localizedDescription
+            )
+        }
+    }
+}

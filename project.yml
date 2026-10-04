@@ -1,0 +1,28 @@
+name: EFI挂载器
+
+options:
+  deploymentTarget:
+    macOS: "11.0"
+
+settings:
+  base:
+    PRODUCT_NAME: EFI挂载器
+    MACOSX_DEPLOYMENT_TARGET: "11.0"
+
+targets:
+  EFI挂载器:
+    type: application
+    platform: macOS
+
+    sources:
+      - path: EFI挂载器
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.efimounter.app
+        PRODUCT_NAME: EFI挂载器
+        INFOPLIST_FILE: EFI挂载器/Info.plist
+        MACOSX_DEPLOYMENT_TARGET: "11.0"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
