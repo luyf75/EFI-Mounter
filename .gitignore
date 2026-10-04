@@ -24,3 +24,13 @@ xcuserdata/
 *.tmp
 *.swp
 *~
+
+# Local release artifacts
+EFI-Mounter-v*.dmg
+dmg-staging/
+build-release/
+build-universal/
+
+# Project documentation generated locally
+EFI挂载器_项目完整状态_*.txt
+*.doc
