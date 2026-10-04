@@ -2,6 +2,10 @@
 
 一个用于 macOS 的 EFI / ESP 分区管理工具。
 
+## 软件截图
+
+![EFI-Mounter](Screenshots/EFI-Mounter.jpeg)
+
 ## 当前功能
 
 - 扫描 EFI / ESP 分区
