@@ -46,3 +46,6 @@ build-*/
 # 本地 README 临时备份
 README.md.backup-*
 README.md.broken-backup
+
+# 本地项目进度总结，禁止提交到 GitHub
+项目进度总结/
