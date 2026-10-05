@@ -223,9 +223,10 @@ final class ViewController: NSViewController {
         ] = [
             ("type", "类型", 100),
             ("name", "磁盘名称", 180),
-            ("disk", "磁盘", 100),
+            ("disk", "磁盘", 80),
+            ("diskSize", "磁盘容量", 100),
             ("efi", "ESP / EFI", 120),
-            ("size", "容量", 90),
+            ("size", "EFI容量", 90),
             ("status", "状态", 150),
             ("action", "操作", 110)
         ]
@@ -286,6 +287,9 @@ final class ViewController: NSViewController {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
+
+        tableView.doubleAction = #selector(showEFIDetail(_:))
+        tableView.target = self
 
         scrollView.borderType = .bezelBorder
 
@@ -401,6 +405,50 @@ final class ViewController: NSViewController {
 
         alert.runModal()
     }
+    
+    // MARK: - EFI 详细信息
+
+    @objc
+    private func showEFIDetail(_ sender: Any?) {
+
+        let row = tableView.clickedRow
+
+        guard row >= 0,
+              row < efiList.count
+        else {
+            return
+        }
+
+        let efi = efiList[row]
+
+        let detailViewController = EFIDetailViewController(
+            efi: efi
+        )
+
+        let window = NSWindow(
+            contentViewController: detailViewController
+        )
+
+        window.title = "EFI详细信息"
+        window.styleMask = [
+            .titled,
+            .closable,
+            .miniaturizable
+        ]
+        window.setContentSize(
+            NSSize(width: 360, height: 380)
+        )
+        window.center()
+        window.isReleasedWhenClosed = false
+
+        let controller = NSWindowController(
+            window: window
+        )
+
+        controller.showWindow(nil)
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
 }
 
 extension ViewController:
@@ -492,6 +540,9 @@ extension ViewController:
         case "disk":
             cell.stringValue = efi.wholeDisk
 
+        case "diskSize":
+            cell.stringValue = efi.diskSizeText
+
         case "efi":
             cell.stringValue = efi.identifier
 
@@ -565,3 +616,226 @@ extension ViewController:
         }
     }
 }
+
+
+// MARK: - EFI Detail Window
+
+private final class EFIDetailViewController: NSViewController {
+
+    private let efi: EFIInfo
+
+    private let mountPathField = NSTextField(
+        labelWithString: ""
+    )
+
+    private let copyButton = NSButton(
+        title: "复制挂载路径",
+        target: nil,
+        action: nil
+    )
+
+    init(efi: EFIInfo) {
+        self.efi = efi
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func loadView() {
+        view = NSView(
+            frame: NSRect(
+                x: 0,
+                y: 0,
+                width: 360,
+                height: 380
+            )
+        )
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // ============================================================
+        // 上半区域：EFI 基本信息
+        // 整个区域独立，以窗口中心为基准水平居中
+        // ============================================================
+
+        let windowWidth: CGFloat = 360
+
+        let labelWidth: CGFloat = 85
+        let columnGap: CGFloat = 10
+        let valueWidth: CGFloat = 185
+
+        let infoGroupWidth =
+            labelWidth +
+            columnGap +
+            valueWidth
+
+        // 标签右边缘固定在窗口中心线
+        let centerX: CGFloat = 180
+        let labelX = centerX - labelWidth
+
+        let rows: [(String, String)] = [
+            ("类型", efi.typeName),
+            ("磁盘名称", efi.diskName),
+            ("物理磁盘", efi.wholeDisk),
+            ("EFI分区", efi.identifier),
+            ("磁盘容量", efi.diskSizeText),
+            ("EFI容量", efi.sizeText),
+            ("分区类型", efi.partitionTypeText),
+            ("状态", efi.statusText)
+        ]
+
+        let firstRowY: CGFloat = 332
+        let rowHeight: CGFloat = 24
+        let rowSpacing: CGFloat = 6
+
+        for (index, row) in rows.enumerated() {
+
+            let y =
+                firstRowY -
+                CGFloat(index) *
+                (rowHeight + rowSpacing)
+
+            let label = NSTextField(
+                labelWithString: row.0
+            )
+
+            label.font = NSFont.boldSystemFont(
+                ofSize: 13
+            )
+
+            label.alignment = .right
+
+            label.frame = NSRect(
+                x: labelX,
+                y: y,
+                width: labelWidth,
+                height: rowHeight
+            )
+
+            let value = NSTextField(
+                labelWithString: row.1
+            )
+
+            value.alignment = .left
+            value.lineBreakMode =
+                .byTruncatingTail
+            value.frame = NSRect(
+                x: centerX +
+                    columnGap,
+                y: y,
+                width: valueWidth,
+                height: rowHeight
+            )
+
+            view.addSubview(label)
+            view.addSubview(value)
+        }
+
+        // ============================================================
+        // 下半区域：挂载路径
+        // 与上半区域完全独立
+        // ============================================================
+
+        let pathLabelWidth: CGFloat = 70
+        let pathGap: CGFloat = 8
+        let pathFieldWidth: CGFloat = 205
+
+        let pathGroupWidth =
+            pathLabelWidth +
+            pathGap +
+            pathFieldWidth
+
+        let pathGroupX =
+            (windowWidth - pathGroupWidth) / 2
+
+        let pathY: CGFloat = 76
+
+        let pathTitle = NSTextField(
+            labelWithString: "挂载路径"
+        )
+
+        pathTitle.font = NSFont.boldSystemFont(
+            ofSize: 13
+        )
+
+        pathTitle.alignment = .right
+
+        pathTitle.frame = NSRect(
+            x: pathGroupX,
+            y: pathY - 4,
+            width: pathLabelWidth,
+            height: 24
+        )
+
+        mountPathField.stringValue =
+            efi.mountPoint ?? "未挂载"
+
+        mountPathField.isEditable = false
+        mountPathField.isBordered = true
+        mountPathField.lineBreakMode =
+            .byTruncatingMiddle
+
+        mountPathField.frame = NSRect(
+            x: pathGroupX +
+                pathLabelWidth +
+                pathGap,
+            y: pathY,
+            width: pathFieldWidth,
+            height: 24
+        )
+
+        view.addSubview(pathTitle)
+        view.addSubview(mountPathField)
+
+        // 复制按钮独立居中于窗口
+        copyButton.target = self
+        copyButton.action = #selector(copyMountPath)
+        copyButton.bezelStyle = .rounded
+
+        let buttonWidth: CGFloat = 105
+        let buttonHeight: CGFloat = 30
+
+        copyButton.frame = NSRect(
+            x: (windowWidth - buttonWidth) / 2,
+            y: 32,
+            width: buttonWidth,
+            height: buttonHeight
+        )
+
+        copyButton.isEnabled =
+            efi.mountPoint != nil &&
+            !(efi.mountPoint?.isEmpty ?? true)
+
+        view.addSubview(copyButton)
+    }
+
+    @objc
+    private func copyMountPath() {
+
+        guard let path = efi.mountPoint,
+              !path.isEmpty
+        else {
+            return
+        }
+
+        NSPasteboard.general.clearContents()
+
+        NSPasteboard.general.setString(
+            path,
+            forType: .string
+        )
+
+        copyButton.title = "已复制"
+
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + 1.2
+        ) { [weak self] in
+            self?.copyButton.title = "复制挂载路径"
+        }
+    }
+}
+

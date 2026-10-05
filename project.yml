@@ -17,11 +17,15 @@ targets:
     sources:
       - path: EFI挂载器
 
+    resources:
+      - path: EFI挂载器/Assets.xcassets
+
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.efimounter.app
         PRODUCT_NAME: EFI挂载器
         INFOPLIST_FILE: EFI挂载器/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MACOSX_DEPLOYMENT_TARGET: "11.0"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic

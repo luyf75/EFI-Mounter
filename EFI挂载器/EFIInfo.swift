@@ -6,6 +6,7 @@ struct EFIInfo {
     let wholeDisk: String
     let diskName: String
     let volumeName: String
+    let diskSize: UInt64
     let size: UInt64
     let isInternal: Bool
 
@@ -18,6 +19,29 @@ struct EFIInfo {
 
     var partitionTypeText: String {
         "ESP / EFI"
+    }
+
+    var diskSizeText: String {
+
+        let gb =
+            Double(diskSize) /
+            1_000_000_000.0
+
+        if gb >= 1.0 {
+            return String(
+                format: "%.1f GB",
+                gb
+            )
+        }
+
+        let mb =
+            Double(diskSize) /
+            1_000_000.0
+
+        return String(
+            format: "%.0f MB",
+            mb
+        )
     }
 
     var sizeText: String {

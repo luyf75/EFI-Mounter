@@ -7,21 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2054894F023946BAA2FD5549 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF3D87D739742739D869BDA /* main.swift */; };
+		1DD25A0DE47934F13CAE23B6 /* EFIManager.swift.backup in Resources */ = {isa = PBXBuildFile; fileRef = 7F8C5DACA930F4026E641A11 /* EFIManager.swift.backup */; };
+		28B61CD3CB27F10AB81980D8 /* ViewController.swift.layout-backup in Resources */ = {isa = PBXBuildFile; fileRef = E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */; };
 		35638C4FB12C2B5C45BFA611 /* EFIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF946EEAA82821AA86B1CA9 /* EFIManager.swift */; };
+		39C524365E3AD117A9AAF15F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095610B9B70E812273E1F130 /* main.swift */; };
 		400B1003327E62D7C7530197 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981004F6B17EE29CBD57BA13 /* AppDelegate.swift */; };
+		484FADC1D7543E4FBDCF81A5 /* ViewController.swift.bak in Resources */ = {isa = PBXBuildFile; fileRef = B52070A61744EACF1B4BA70D /* ViewController.swift.bak */; };
+		5D9C9FE0CD2D97C8BEEE634D /* EFIManager.swift.bak2 in Resources */ = {isa = PBXBuildFile; fileRef = 841FC9B6940BD26B585ACFCD /* EFIManager.swift.bak2 */; };
 		794578263DD04DA6020D1324 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832A573C3986AE4E0F810A3F /* ViewController.swift */; };
+		796A16545DEF54BAB37E5638 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C236AF09C60A641D5A45E59 /* Assets.xcassets */; };
 		7B006334878D67E981343525 /* EFIInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB8F71D5BB3101F96F7B46B /* EFIInfo.swift */; };
+		916DD57F555ABF741B5CCF75 /* EFI图标.icns in Resources */ = {isa = PBXBuildFile; fileRef = D28CFEDB5E95167B26F3599E /* EFI图标.icns */; };
+		B2545E598993B3239853A1B4 /* EFIManager.swift.backup2 in Resources */ = {isa = PBXBuildFile; fileRef = CF330489887CD0BB574B3D33 /* EFIManager.swift.backup2 */; };
+		CABB8D953D0B2A2315CDED4C /* AppDelegate.swift.bak in Resources */ = {isa = PBXBuildFile; fileRef = DE1352E69A06F79EF21C0CC8 /* AppDelegate.swift.bak */; };
+		F849440A1B29A41E75CD625C /* EFIManager.swift.bak in Resources */ = {isa = PBXBuildFile; fileRef = 95DE9B40A1AA098713D1FE99 /* EFIManager.swift.bak */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		ADF3D87D739742739D869BDA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		095610B9B70E812273E1F130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		1C236AF09C60A641D5A45E59 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7EF946EEAA82821AA86B1CA9 /* EFIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EFIManager.swift; sourceTree = "<group>"; };
+		7F8C5DACA930F4026E641A11 /* EFIManager.swift.backup */ = {isa = PBXFileReference; path = EFIManager.swift.backup; sourceTree = "<group>"; };
 		832A573C3986AE4E0F810A3F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		841FC9B6940BD26B585ACFCD /* EFIManager.swift.bak2 */ = {isa = PBXFileReference; path = EFIManager.swift.bak2; sourceTree = "<group>"; };
 		8AB8F71D5BB3101F96F7B46B /* EFIInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EFIInfo.swift; sourceTree = "<group>"; };
+		95DE9B40A1AA098713D1FE99 /* EFIManager.swift.bak */ = {isa = PBXFileReference; path = EFIManager.swift.bak; sourceTree = "<group>"; };
 		981004F6B17EE29CBD57BA13 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B52070A61744EACF1B4BA70D /* ViewController.swift.bak */ = {isa = PBXFileReference; path = ViewController.swift.bak; sourceTree = "<group>"; };
+		CF330489887CD0BB574B3D33 /* EFIManager.swift.backup2 */ = {isa = PBXFileReference; path = EFIManager.swift.backup2; sourceTree = "<group>"; };
+		D28CFEDB5E95167B26F3599E /* EFI图标.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "EFI图标.icns"; sourceTree = "<group>"; };
 		DA652CC74628466E677737A6 /* EFI挂载器.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EFI挂载器.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC73AC9BFF9517194D6E78E6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DE1352E69A06F79EF21C0CC8 /* AppDelegate.swift.bak */ = {isa = PBXFileReference; path = AppDelegate.swift.bak; sourceTree = "<group>"; };
+		E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */ = {isa = PBXFileReference; path = "ViewController.swift.layout-backup"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -45,11 +63,20 @@
 			isa = PBXGroup;
 			children = (
 				981004F6B17EE29CBD57BA13 /* AppDelegate.swift */,
-				ADF3D87D739742739D869BDA /* main.swift */,
+				DE1352E69A06F79EF21C0CC8 /* AppDelegate.swift.bak */,
+				1C236AF09C60A641D5A45E59 /* Assets.xcassets */,
+				D28CFEDB5E95167B26F3599E /* EFI图标.icns */,
 				8AB8F71D5BB3101F96F7B46B /* EFIInfo.swift */,
 				7EF946EEAA82821AA86B1CA9 /* EFIManager.swift */,
+				7F8C5DACA930F4026E641A11 /* EFIManager.swift.backup */,
+				CF330489887CD0BB574B3D33 /* EFIManager.swift.backup2 */,
+				95DE9B40A1AA098713D1FE99 /* EFIManager.swift.bak */,
+				841FC9B6940BD26B585ACFCD /* EFIManager.swift.bak2 */,
 				DC73AC9BFF9517194D6E78E6 /* Info.plist */,
+				095610B9B70E812273E1F130 /* main.swift */,
 				832A573C3986AE4E0F810A3F /* ViewController.swift */,
+				B52070A61744EACF1B4BA70D /* ViewController.swift.bak */,
+				E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */,
 			);
 			path = "EFI挂载器";
 			sourceTree = "<group>";
@@ -61,7 +88,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 537C6465F35F53FCB0C6C9B5 /* Build configuration list for PBXNativeTarget "EFI挂载器" */;
 			buildPhases = (
-				4A2EC2A9270E264D1F813B22 /* Sources */, 
+				4A2EC2A9270E264D1F813B22 /* Sources */,
+				20C4648AA30E0422F30D713A /* Resources */,
 			);
 			buildRules = (
 			);
@@ -107,16 +135,35 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		20C4648AA30E0422F30D713A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CABB8D953D0B2A2315CDED4C /* AppDelegate.swift.bak in Resources */,
+				796A16545DEF54BAB37E5638 /* Assets.xcassets in Resources */,
+				1DD25A0DE47934F13CAE23B6 /* EFIManager.swift.backup in Resources */,
+				B2545E598993B3239853A1B4 /* EFIManager.swift.backup2 in Resources */,
+				F849440A1B29A41E75CD625C /* EFIManager.swift.bak in Resources */,
+				5D9C9FE0CD2D97C8BEEE634D /* EFIManager.swift.bak2 in Resources */,
+				916DD57F555ABF741B5CCF75 /* EFI图标.icns in Resources */,
+				484FADC1D7543E4FBDCF81A5 /* ViewController.swift.bak in Resources */,
+				28B61CD3CB27F10AB81980D8 /* ViewController.swift.layout-backup in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		4A2EC2A9270E264D1F813B22 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2054894F023946BAA2FD5549 /* main.swift in Sources */,
 				400B1003327E62D7C7530197 /* AppDelegate.swift in Sources */,
 				7B006334878D67E981343525 /* EFIInfo.swift in Sources */,
 				35638C4FB12C2B5C45BFA611 /* EFIManager.swift in Sources */,
 				794578263DD04DA6020D1324 /* ViewController.swift in Sources */,
+				39C524365E3AD117A9AAF15F /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,7 +234,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "EFI挂载器/Info.plist";
-				INFOPLIST_KEY_CFBundleExecutable = "$(EXECUTABLE_NAME)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -208,7 +254,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "EFI挂载器/Info.plist";
-				INFOPLIST_KEY_CFBundleExecutable = "$(EXECUTABLE_NAME)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

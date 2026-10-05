@@ -6,6 +6,8 @@
 	<string>EFI挂载器</string>
 	<key>CFBundleExecutable</key>
 	<string>EFI挂载器</string>
+	<key>CFBundleIconFile</key>
+	<string>EFI图标</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.efimounter.app</string>
 	<key>CFBundleName</key>

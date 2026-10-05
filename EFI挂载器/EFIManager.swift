@@ -143,6 +143,24 @@ final class EFIManager {
                 diskInfo["VolumeName"] as? String ??
                 wholeDisk
 
+    
+
+            let diskSize: UInt64 = {
+                if let value = diskInfo["Size"] as? UInt64 {
+                    return value
+                }
+
+                if let value = diskInfo["Size"] as? Int64 {
+                    return UInt64(max(0, value))
+                }
+
+                if let value = diskInfo["Size"] as? NSNumber {
+                    return value.uint64Value
+                }
+
+                return 0
+            }()
+
             for partition in partitions {
 
                 guard let identifier =
@@ -180,6 +198,7 @@ final class EFIManager {
                         wholeDisk: wholeDisk,
                         diskName: diskName,
                         volumeName: volumeName,
+                        diskSize: diskSize,
                         size: size,
                         isInternal: internalDisk,
                         isMounted: mountPoint != nil,
