@@ -37,3 +37,12 @@ EFI挂载器_项目完整状态_*.txt
 
 # Additional local build snapshots
 build-*/
+
+# 本地项目开发总结，不提交到 GitHub
+*项目总结*.txt
+*项目完整状态*.txt
+*今晚项目总结*.txt
+
+# 本地 README 临时备份
+README.md.backup-*
+README.md.broken-backup
