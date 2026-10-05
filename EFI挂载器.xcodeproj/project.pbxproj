@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1DD25A0DE47934F13CAE23B6 /* EFIManager.swift.backup in Resources */ = {isa = PBXBuildFile; fileRef = 7F8C5DACA930F4026E641A11 /* EFIManager.swift.backup */; };
-		28B61CD3CB27F10AB81980D8 /* ViewController.swift.layout-backup in Resources */ = {isa = PBXBuildFile; fileRef = E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */; };
 		35638C4FB12C2B5C45BFA611 /* EFIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF946EEAA82821AA86B1CA9 /* EFIManager.swift */; };
 		39C524365E3AD117A9AAF15F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095610B9B70E812273E1F130 /* main.swift */; };
 		400B1003327E62D7C7530197 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981004F6B17EE29CBD57BA13 /* AppDelegate.swift */; };
@@ -39,7 +38,6 @@
 		DA652CC74628466E677737A6 /* EFI挂载器.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EFI挂载器.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC73AC9BFF9517194D6E78E6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DE1352E69A06F79EF21C0CC8 /* AppDelegate.swift.bak */ = {isa = PBXFileReference; path = AppDelegate.swift.bak; sourceTree = "<group>"; };
-		E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */ = {isa = PBXFileReference; path = "ViewController.swift.layout-backup"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -76,7 +74,6 @@
 				095610B9B70E812273E1F130 /* main.swift */,
 				832A573C3986AE4E0F810A3F /* ViewController.swift */,
 				B52070A61744EACF1B4BA70D /* ViewController.swift.bak */,
-				E72851CBA6C02DB8809089EB /* ViewController.swift.layout-backup */,
 			);
 			path = "EFI挂载器";
 			sourceTree = "<group>";
@@ -148,7 +145,6 @@
 				5D9C9FE0CD2D97C8BEEE634D /* EFIManager.swift.bak2 in Resources */,
 				916DD57F555ABF741B5CCF75 /* EFI图标.icns in Resources */,
 				484FADC1D7543E4FBDCF81A5 /* ViewController.swift.bak in Resources */,
-				28B61CD3CB27F10AB81980D8 /* ViewController.swift.layout-backup in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
