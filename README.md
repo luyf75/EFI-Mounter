@@ -103,6 +103,22 @@ GitHub 和项目地址支持直接点击访问。
 
 ---
 
+# 📸 软件截图
+
+### 🖥️ 软件首页
+
+![EFI挂载器首页](Screenshots/main.png)
+
+### 📊 EFI详细信息
+
+![EFI详细信息](Screenshots/detail.png)
+
+### ℹ️ 关于 EFI挂载器
+
+![关于 EFI挂载器](Screenshots/about.png)
+
+---
+
 # 🖥️ 系统要求
 
 最低支持：
