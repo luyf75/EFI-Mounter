@@ -227,6 +227,7 @@ final class ViewController: NSViewController {
             ("diskSize", "磁盘容量", 100),
             ("efi", "ESP / EFI", 120),
             ("size", "EFI容量", 90),
+            ("available", "EFI可用", 90),
             ("status", "状态", 150),
             ("action", "操作", 110)
         ]
@@ -567,6 +568,9 @@ extension ViewController:
         case "size":
             cell.stringValue = efi.sizeText
 
+        case "available":
+            cell.stringValue = efi.availableSizeText
+
         case "status":
             cell.stringValue = efi.statusText
 
@@ -723,6 +727,7 @@ private final class EFIDetailViewController: NSViewController {
             ("EFI分区", efi.identifier),
             ("磁盘容量", efi.diskSizeText),
             ("EFI容量", efi.sizeText),
+            ("EFI可用", efi.availableSizeText),
             ("分区类型", efi.partitionTypeText),
             ("状态", efi.isMounted ? "已挂载" : "未挂载")
         ]
@@ -858,7 +863,7 @@ private final class EFIDetailViewController: NSViewController {
 
         efi = updatedEFI
 
-        guard valueFields.count == 8 else {
+        guard valueFields.count == 9 else {
             return
         }
 
@@ -869,6 +874,7 @@ private final class EFIDetailViewController: NSViewController {
             efi.identifier,
             efi.diskSizeText,
             efi.sizeText,
+            efi.availableSizeText,
             efi.partitionTypeText,
             efi.isMounted ? "已挂载" : "未挂载"
         ]

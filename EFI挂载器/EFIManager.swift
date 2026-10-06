@@ -192,6 +192,9 @@ final class EFIManager {
                 let mountPoint =
                     getMountPoint(identifier)
 
+                let availableSize =
+                    getAvailableSize(mountPoint)
+
                 list.append(
                     EFIInfo(
                         identifier: identifier,
@@ -200,6 +203,7 @@ final class EFIManager {
                         volumeName: volumeName,
                         diskSize: diskSize,
                         size: size,
+                        availableSize: availableSize,
                         isInternal: internalDisk,
                         isMounted: mountPoint != nil,
                         mountPoint: mountPoint
@@ -269,6 +273,41 @@ final class EFIManager {
            !mountPoint.isEmpty {
 
             return mountPoint
+        }
+
+        return nil
+    }
+
+    private func getAvailableSize(
+        _ mountPoint: String?
+    ) -> UInt64? {
+
+        guard let mountPoint,
+              !mountPoint.isEmpty
+        else {
+            return nil
+        }
+
+        do {
+            let values =
+                try URL(
+                    fileURLWithPath: mountPoint
+                ).resourceValues(
+                    forKeys: [
+                        .volumeAvailableCapacityKey
+                    ]
+                )
+
+            if let available =
+                values.volumeAvailableCapacity {
+
+                return UInt64(
+                    max(0, available)
+                )
+            }
+        }
+        catch {
+            return nil
         }
 
         return nil

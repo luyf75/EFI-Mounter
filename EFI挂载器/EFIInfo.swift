@@ -8,6 +8,7 @@ struct EFIInfo {
     let volumeName: String
     let diskSize: UInt64
     let size: UInt64
+    let availableSize: UInt64?
     let isInternal: Bool
 
     var isMounted: Bool
@@ -36,6 +37,33 @@ struct EFIInfo {
 
         let mb =
             Double(diskSize) /
+            1_000_000.0
+
+        return String(
+            format: "%.0f MB",
+            mb
+        )
+    }
+
+    var availableSizeText: String {
+
+        guard let availableSize else {
+            return "—"
+        }
+
+        let gb =
+            Double(availableSize) /
+            1_000_000_000.0
+
+        if gb >= 1.0 {
+            return String(
+                format: "%.1f GB",
+                gb
+            )
+        }
+
+        let mb =
+            Double(availableSize) /
             1_000_000.0
 
         return String(
