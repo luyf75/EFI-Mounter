@@ -24,8 +24,21 @@ final class ViewController: NSViewController {
     )
 
     private let statusLabel = NSTextField(
-        labelWithString: "正在扫描 EFI..."
+        labelWithString: ""
     )
+
+    private let detailHintLabel: NSTextField = {
+        let label = NSTextField(
+            labelWithString: "💡 双击EFI分区对应行的任意区域，可查看详细信息"
+        )
+        label.font = NSFont.systemFont(ofSize: 32, weight: .bold)
+        label.textColor = .controlAccentColor
+        label.alignment = .center
+        label.alignment = .center
+        label.maximumNumberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
 
     private var efiList: [EFIInfo] = []
 
@@ -152,6 +165,7 @@ final class ViewController: NSViewController {
         view.addSubview(refreshButton)
         view.addSubview(unmountAllButton)
         view.addSubview(statusLabel)
+        view.addSubview(detailHintLabel)
         view.addSubview(scrollView)
 
         print("=== BEFORE SETUP TABLE ===")
@@ -208,11 +222,18 @@ final class ViewController: NSViewController {
             height: 22
         )
 
+        detailHintLabel.frame = NSRect(
+            x: 20,
+            y: 35,
+            width: max(600, width - 40),
+            height: 38
+        )
+
         scrollView.frame = NSRect(
             x: 20,
-            y: 20,
+            y: 100,
             width: max(600, width - 40),
-            height: max(300, height - 90)
+            height: max(220, height - 170)
         )
     }
 
@@ -300,8 +321,6 @@ final class ViewController: NSViewController {
     @objc
     private func refresh() {
 
-        statusLabel.stringValue = "正在扫描 EFI..."
-
         DispatchQueue.global(qos: .userInitiated).async {
 
             let list = EFIManager.shared.scanEFI()
@@ -311,8 +330,12 @@ final class ViewController: NSViewController {
                 self.efiList = list
                 self.tableView.reloadData()
 
+                let totalCount = list.count
+                let internalCount = list.filter { $0.isInternal }.count
+                let externalCount = totalCount - internalCount
+
                 self.statusLabel.stringValue =
-                    "检测到 \(list.count) 个 EFI 分区"
+                    "已检测到 \(totalCount) 个 EFI 分区：内置 EFI 分区 \(internalCount) 个，外置 EFI 分区 \(externalCount) 个"
 
                 let hasMounted =
                     list.contains { $0.isMounted }
@@ -437,7 +460,7 @@ final class ViewController: NSViewController {
             .miniaturizable
         ]
         window.setContentSize(
-            NSSize(width: 360, height: 380)
+            NSSize(width: 360, height: 410)
         )
         window.center()
         window.isReleasedWhenClosed = false
@@ -798,7 +821,7 @@ private final class EFIDetailViewController: NSViewController {
         let pathGroupX =
             (windowWidth - pathGroupWidth) / 2
 
-        let pathY: CGFloat = 76
+        let pathY: CGFloat = 46
 
         let pathTitle = NSTextField(
             labelWithString: "挂载路径"
@@ -847,7 +870,7 @@ private final class EFIDetailViewController: NSViewController {
 
         copyButton.frame = NSRect(
             x: (windowWidth - buttonWidth) / 2,
-            y: 32,
+            y: 2,
             width: buttonWidth,
             height: buttonHeight
         )

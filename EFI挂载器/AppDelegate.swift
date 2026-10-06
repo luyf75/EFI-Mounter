@@ -8,6 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ notification: Notification
     ) {
 
+        // 跟随 macOS 系统深色 / 浅色模式
+        NSApp.appearance = nil
+
         let viewController = ViewController()
 
         window = NSWindow(
