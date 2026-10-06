@@ -248,11 +248,30 @@ final class EFIManager {
         _ identifier: String
     ) -> String? {
 
+        let start = CFAbsoluteTimeGetCurrent()
+
+        NSLog(
+            "[挂载测试] getMountPoint 开始：%@",
+            identifier
+        )
+
+        let runStart = CFAbsoluteTimeGetCurrent()
+
         let result = run([
             "info",
             "-plist",
             identifier
         ])
+
+        let runElapsed =
+            CFAbsoluteTimeGetCurrent() - runStart
+
+        NSLog(
+            "[挂载测试] diskutil info -plist：%.3f 秒",
+            runElapsed
+        )
+
+        let parseStart = CFAbsoluteTimeGetCurrent()
 
         guard result.status == 0,
               let data =
@@ -265,15 +284,48 @@ final class EFIManager {
                         format: nil
                     ) as? [String: Any]
         else {
+
+            let total =
+                CFAbsoluteTimeGetCurrent() - start
+
+            NSLog(
+                "[挂载测试] getMountPoint 总耗时：%.3f 秒",
+                total
+            )
+
             return nil
         }
+
+        let parseElapsed =
+            CFAbsoluteTimeGetCurrent() - parseStart
+
+        NSLog(
+            "[挂载测试] plist 解析：%.3f 秒",
+            parseElapsed
+        )
 
         if let mountPoint =
             plist["MountPoint"] as? String,
            !mountPoint.isEmpty {
 
+            let total =
+                CFAbsoluteTimeGetCurrent() - start
+
+            NSLog(
+                "[挂载测试] getMountPoint 总耗时：%.3f 秒",
+                total
+            )
+
             return mountPoint
         }
+
+        let total =
+            CFAbsoluteTimeGetCurrent() - start
+
+        NSLog(
+            "[挂载测试] getMountPoint 未找到挂载点，总耗时：%.3f 秒",
+            total
+        )
 
         return nil
     }
@@ -418,17 +470,58 @@ final class EFIManager {
         _ efi: EFIInfo
     ) -> Result<String, Error> {
 
+        let mountStart = CFAbsoluteTimeGetCurrent()
+
+        NSLog("")
+        NSLog("========== EFI 挂载耗时测试 ==========")
+        NSLog("[挂载测试] mount() 开始：%@", efi.identifier)
+
         if let existing =
             getMountPoint(efi.identifier) {
 
+            let elapsed =
+                CFAbsoluteTimeGetCurrent() - mountStart
+
+            NSLog(
+                "[挂载测试] 已经挂载，检查耗时：%.3f 秒",
+                elapsed
+            )
+
+            NSLog("======================================")
+
             return .success(existing)
         }
+
+        let authorizationStart =
+            CFAbsoluteTimeGetCurrent()
 
         let result =
             runAsAdministrator([
                 "mount",
                 efi.identifier
             ])
+
+        let authorizationElapsed =
+            CFAbsoluteTimeGetCurrent() - authorizationStart
+
+        NSLog(
+            "[挂载测试] 管理员授权 + diskutil mount：%.3f 秒",
+            authorizationElapsed
+        )
+
+        NSLog(
+            "[挂载测试] diskutil mount output：%@",
+            result.output.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        )
+
+        NSLog(
+            "[挂载测试] diskutil mount error：%@",
+            result.error.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        )
 
         guard result.status == 0 else {
 
@@ -451,22 +544,20 @@ final class EFIManager {
             )
         }
 
-        if let path =
-            getMountPoint(efi.identifier) {
+        let totalElapsed =
+            CFAbsoluteTimeGetCurrent() - mountStart
 
-            return .success(path)
-        }
-
-        return .failure(
-            NSError(
-                domain: "EFI挂载器",
-                code: -2,
-                userInfo: [
-                    NSLocalizedDescriptionKey:
-                        "挂载成功，但没有找到实际挂载路径。"
-                ]
-            )
+        NSLog(
+            "[挂载测试] diskutil mount 成功，立即返回：%.3f 秒",
+            totalElapsed
         )
+
+        NSLog("======================================")
+
+        // 挂载已经成功。
+        // 不再同步执行 diskutil info -plist，
+        // 避免等待数秒后才让界面更新。
+        return .success("")
     }
 
     // MARK: - 卸载

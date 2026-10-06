@@ -47,6 +47,9 @@ final class ViewController: NSViewController {
     private var autoRefreshTimer: Timer?
     private var isRefreshing = false
 
+    // 用于避免旧的后台刷新结果覆盖刚完成的挂载/推出操作
+    private var refreshGeneration = 0
+
     override func loadView() {
         view = NSView(
             frame: NSRect(
@@ -249,8 +252,8 @@ final class ViewController: NSViewController {
             ("efi", "ESP / EFI", 120),
             ("size", "EFI容量", 90),
             ("available", "EFI可用", 90),
-            ("status", "状态", 150),
-            ("action", "操作", 110)
+            ("status", "状态", 100),
+            ("action", "操作", 150)
         ]
 
         for item in columns {
@@ -321,11 +324,20 @@ final class ViewController: NSViewController {
     @objc
     private func refresh() {
 
+        let generation = self.refreshGeneration
+
         DispatchQueue.global(qos: .userInitiated).async {
 
             let list = EFIManager.shared.scanEFI()
 
             DispatchQueue.main.async {
+
+                // 如果刷新开始后用户进行了挂载/推出操作，
+                // 当前扫描结果可能已经过时，不能覆盖最新 UI 状态。
+                guard generation == self.refreshGeneration else {
+                    self.isRefreshing = false
+                    return
+                }
 
                 self.efiList = list
                 self.tableView.reloadData()
@@ -522,17 +534,52 @@ extension ViewController:
 
         if identifier == "action" {
 
-            let button = NSButton(
+            let container = NSView(
+                frame: NSRect(
+                    x: 0,
+                    y: 0,
+                    width: tableColumn?.width ?? 110,
+                    height: tableView.rowHeight
+                )
+            )
+
+            let actionButton = NSButton(
                 title: efi.isMounted ? "推出" : "挂载",
                 target: self,
                 action: #selector(actionButton(_:))
             )
 
-            button.bezelStyle = .rounded
+            actionButton.bezelStyle = .rounded
+            actionButton.tag = row
+            actionButton.frame = NSRect(
+                x: 8,
+                y: 4,
+                width: 60,
+                height: tableView.rowHeight - 8
+            )
 
-            button.tag = row
+            let openButton = NSButton(
+                title: "打开",
+                target: self,
+                action: #selector(openEFIButton(_:))
+            )
 
-            return button
+            openButton.bezelStyle = .rounded
+            openButton.tag = row
+            openButton.frame = NSRect(
+                x: 82,
+                y: 4,
+                width: 60,
+                height: tableView.rowHeight - 8
+            )
+
+            // 未挂载时不能打开 EFI
+            openButton.isEnabled = efi.isMounted
+
+            container.addSubview(actionButton)
+            container.addSubview(openButton)
+
+            return container
         }
 
         let cellView = NSTableCellView(
@@ -623,6 +670,9 @@ extension ViewController:
 
         let efi = efiList[row]
 
+        // 操作开始时，使之前已经启动的后台刷新结果失效
+        self.refreshGeneration += 1
+
         // 操作过程中立即禁用当前按钮，避免重复操作
         sender.isEnabled = false
 
@@ -640,7 +690,13 @@ extension ViewController:
 
                     case .success:
 
-                        self.refresh()
+                        // 立即更新当前行状态
+                        self.efiList[row].isMounted = false
+                        self.efiList[row].mountPoint = nil
+                        self.tableView.reloadData()
+
+                        // 后台完整扫描校正真实状态
+                        self.refreshIfNeeded()
 
                     case .failure(let error):
 
@@ -664,11 +720,14 @@ extension ViewController:
 
                 case .success(let path):
 
-                    self.refresh()
+                    // 立即更新当前行状态
+                    self.efiList[row].isMounted = true
+                    self.efiList[row].mountPoint =
+                        path.isEmpty ? nil : path
+                    self.tableView.reloadData()
 
-                    NSWorkspace.shared.open(
-                        URL(fileURLWithPath: path)
-                    )
+                    // 后台完整扫描校正真实状态
+                    self.refreshIfNeeded()
 
                 case .failure(let error):
 
@@ -679,6 +738,33 @@ extension ViewController:
                 }
             }
         }
+    }
+
+    @objc
+    private func openEFIButton(
+        _ sender: NSButton
+    ) {
+
+        let row = sender.tag
+
+        guard row >= 0,
+              row < efiList.count
+        else {
+            return
+        }
+
+        let efi = efiList[row]
+
+        guard efi.isMounted,
+              let mountPoint = efi.mountPoint,
+              !mountPoint.isEmpty
+        else {
+            return
+        }
+
+        NSWorkspace.shared.open(
+            URL(fileURLWithPath: mountPoint)
+        )
     }
 }
 

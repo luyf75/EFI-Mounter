@@ -97,12 +97,16 @@ struct EFIInfo {
 
     var statusText: String {
 
+        guard isMounted else {
+            return "未挂载"
+        }
+
         if let path = mountPoint,
-           isMounted {
+           !path.isEmpty {
 
             return "已挂载：\(path)"
         }
 
-        return "未挂载"
+        return "已挂载"
     }
 }
