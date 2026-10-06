@@ -37,3 +37,6 @@ EFI挂载器_项目完整状态_*.txt
 
 # Additional local build snapshots
 build-*/
+
+# 本地发布产物
+release/
