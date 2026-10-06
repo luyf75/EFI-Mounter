@@ -412,22 +412,9 @@ final class EFIManager {
             )
         }
 
-        if let path =
-            getMountPoint(efi.identifier) {
-
-            return .success(path)
-        }
-
-        return .failure(
-            NSError(
-                domain: "EFI挂载器",
-                code: -2,
-                userInfo: [
-                    NSLocalizedDescriptionKey:
-                        "挂载成功，但没有找到实际挂载路径。"
-                ]
-            )
-        )
+        // 挂载成功后不再立即调用 getMountPoint()。
+        // 实际挂载路径由后续 refresh() 扫描后获取。
+        return .success("")
     }
 
     // MARK: - 卸载
@@ -470,30 +457,46 @@ final class EFIManager {
 
     func unmountAll(
         _ list: [EFIInfo]
-    ) -> Bool {
+    ) -> Result<Void, Error> {
 
         let mounted = list.filter {
             getMountPoint($0.identifier) != nil
         }
 
         guard !mounted.isEmpty else {
-            return true
+            return .success(())
         }
 
-        var allSuccess = true
-
         for efi in mounted {
+
             let result = run([
                 "unmount",
                 efi.identifier
             ])
 
-            if result.status != 0 {
-                allSuccess = false
+            guard result.status == 0 else {
+
+                let message =
+                    result.error.isEmpty
+                    ? result.output
+                    : result.error
+
+                return .failure(
+                    NSError(
+                        domain: "EFI挂载器",
+                        code: Int(result.status),
+                        userInfo: [
+                            NSLocalizedDescriptionKey:
+                                message.trimmingCharacters(
+                                    in: .whitespacesAndNewlines
+                                )
+                        ]
+                    )
+                )
             }
         }
 
-        return allSuccess
+        return .success(())
     }
 
     // MARK: - 打开 EFI
@@ -517,21 +520,21 @@ final class EFIManager {
 
     func mountAll(
         _ list: [EFIInfo]
-    ) -> [String] {
+    ) -> Result<[String], Error> {
 
-        // 已经挂载的 EFI 不需要再次授权
         let unmounted = list.filter {
             getMountPoint($0.identifier) == nil
         }
 
         guard !unmounted.isEmpty else {
 
-            return list.compactMap {
+            let paths = list.compactMap {
                 getMountPoint($0.identifier)
             }
+
+            return .success(paths)
         }
 
-        // 一次管理员授权，批量执行所有 diskutil mount
         let arguments = unmounted.map {
             $0.identifier
         }
@@ -565,22 +568,99 @@ final class EFIManager {
         process.standardError = errorPipe
 
         do {
-
             try process.run()
             process.waitUntilExit()
-
         } catch {
-
-            return []
+            return .failure(error)
         }
 
         guard process.terminationStatus == 0 else {
-            return []
+
+            let errorData =
+                errorPipe.fileHandleForReading
+                    .readDataToEndOfFile()
+
+            let message =
+                String(
+                    data: errorData,
+                    encoding: .utf8
+                ) ?? "一键挂载失败。"
+
+            return .failure(
+                NSError(
+                    domain: "EFI挂载器",
+                    code: Int(process.terminationStatus),
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            message.trimmingCharacters(
+                                in: .whitespacesAndNewlines
+                            )
+                    ]
+                )
+            )
         }
 
-        // 重新读取实际挂载路径
-        return list.compactMap {
+        let paths = list.compactMap {
             getMountPoint($0.identifier)
         }
+
+        return .success(paths)
     }
+
+
+    // MARK: - 废纸篓占用
+
+    func getTrashSize(
+        _ mountPoint: String
+    ) -> UInt64 {
+
+        let trashPath =
+            mountPoint + "/.Trashes"
+
+        let fileManager =
+            FileManager.default
+
+        guard
+            fileManager.fileExists(atPath: trashPath)
+        else {
+            return 0
+        }
+
+        var totalSize: UInt64 = 0
+
+        guard
+            let enumerator =
+                fileManager.enumerator(
+                    at: URL(fileURLWithPath: trashPath),
+                    includingPropertiesForKeys: [
+                        .fileSizeKey,
+                        .isRegularFileKey
+                    ]
+                )
+        else {
+            return 0
+        }
+
+        for case let url as URL in enumerator {
+
+            guard
+                let values =
+                    try? url.resourceValues(
+                        forKeys: [
+                            .fileSizeKey,
+                            .isRegularFileKey
+                        ]
+                    ),
+                values.isRegularFile == true,
+                let size = values.fileSize
+            else {
+                continue
+            }
+
+            totalSize += UInt64(size)
+        }
+
+        return totalSize
+    }
+
 }

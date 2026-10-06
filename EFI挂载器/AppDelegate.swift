@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ notification: Notification
     ) {
 
+        NSApp.appearance = nil
+
         let viewController = ViewController()
 
         window = NSWindow(

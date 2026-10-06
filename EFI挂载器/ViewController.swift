@@ -227,6 +227,7 @@ final class ViewController: NSViewController {
             ("diskSize", "磁盘容量", 100),
             ("efi", "ESP / EFI", 120),
             ("size", "EFI容量", 90),
+            ("available", "EFI可用", 90),
             ("status", "状态", 150),
             ("action", "操作", 110)
         ]
@@ -297,7 +298,9 @@ final class ViewController: NSViewController {
     }
 
     @objc
-    private func refresh() {
+    private func refresh(
+        completion: (() -> Void)? = nil
+    ) {
 
         statusLabel.stringValue = "正在扫描 EFI..."
 
@@ -326,6 +329,8 @@ final class ViewController: NSViewController {
                     hasMounted
 
                 self.isRefreshing = false
+
+                completion?()
             }
         }
     }
@@ -339,7 +344,7 @@ final class ViewController: NSViewController {
 
         DispatchQueue.global(qos: .userInitiated).async {
 
-            let paths = EFIManager.shared.mountAll(list)
+            let result = EFIManager.shared.mountAll(list)
 
             DispatchQueue.main.async {
 
@@ -347,15 +352,27 @@ final class ViewController: NSViewController {
 
                 self.refresh()
 
-                let message =
-                    paths.isEmpty
-                    ? "没有新的 EFI 被挂载。"
-                    : paths.joined(separator: "\n")
+                switch result {
 
-                self.showAlert(
-                    title: "一键挂载完成",
-                    message: message
-                )
+                case .success(let paths):
+
+                    let message =
+                        paths.isEmpty
+                        ? "没有新的 EFI 被挂载。"
+                        : paths.joined(separator: "\n")
+
+                    self.showAlert(
+                        title: "一键挂载完成",
+                        message: message
+                    )
+
+                case .failure(let error):
+
+                    self.showAlert(
+                        title: "一键挂载失败",
+                        message: error.localizedDescription
+                    )
+                }
             }
         }
     }
@@ -369,7 +386,7 @@ final class ViewController: NSViewController {
 
         DispatchQueue.global(qos: .userInitiated).async {
 
-            let success =
+            let result =
                 EFIManager.shared.unmountAll(list)
 
             DispatchQueue.main.async {
@@ -378,14 +395,22 @@ final class ViewController: NSViewController {
 
                 self.refresh()
 
-                self.showAlert(
-                    title: success
-                        ? "一键推出完成"
-                        : "一键推出失败",
-                    message: success
-                        ? "所有已挂载的 EFI 已推出。"
-                        : "部分 EFI 可能没有成功推出。"
-                )
+                switch result {
+
+                case .success:
+
+                    self.showAlert(
+                        title: "一键推出完成",
+                        message: "所有已挂载的 EFI 已推出。"
+                    )
+
+                case .failure(let error):
+
+                    self.showAlert(
+                        title: "一键推出失败",
+                        message: error.localizedDescription
+                    )
+                }
             }
         }
     }
@@ -421,9 +446,10 @@ final class ViewController: NSViewController {
 
         let efi = efiList[row]
 
-        let detailViewController = EFIDetailViewController(
-            efi: efi
-        )
+        let detailViewController =
+            EFIDetailViewController(
+                efi: efi
+            )
 
         let window = NSWindow(
             contentViewController: detailViewController
@@ -436,18 +462,43 @@ final class ViewController: NSViewController {
             .miniaturizable
         ]
         window.setContentSize(
-            NSSize(width: 360, height: 380)
+            NSSize(width: 360, height: 420)
         )
         window.center()
         window.isReleasedWhenClosed = false
 
-        let controller = NSWindowController(
-            window: window
-        )
+        let controller =
+            NSWindowController(
+                window: window
+            )
 
         controller.showWindow(nil)
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate(
+            ignoringOtherApps: true
+        )
+
+        // 窗口先立即显示，再后台刷新 EFI 数据
+        let identifier = efi.identifier
+
+        DispatchQueue.global(qos: .utility).async {
+
+            let latestEFI =
+                EFIManager.shared.scanEFI().first {
+                    $0.identifier == identifier
+                }
+
+            guard let latestEFI = latestEFI else {
+                return
+            }
+
+            DispatchQueue.main.async {
+
+                detailViewController.updateEFI(
+                    latestEFI
+                )
+            }
+        }
     }
 }
 
@@ -549,6 +600,9 @@ extension ViewController:
         case "size":
             cell.stringValue = efi.sizeText
 
+        case "available":
+            cell.stringValue = efi.availableSizeText
+
         case "status":
             cell.stringValue = efi.statusText
 
@@ -599,13 +653,27 @@ extension ViewController:
 
         switch EFIManager.shared.mount(efi) {
 
-        case .success(let path):
+        case .success:
 
-            refresh()
+            refresh {
 
-            NSWorkspace.shared.open(
-                URL(fileURLWithPath: path)
-            )
+                guard let mountedEFI =
+                        self.efiList.first(
+                            where: {
+                                $0.identifier == efi.identifier
+                            }
+                        ),
+                      let path =
+                        mountedEFI.mountPoint,
+                      !path.isEmpty
+                else {
+                    return
+                }
+
+                NSWorkspace.shared.open(
+                    URL(fileURLWithPath: path)
+                )
+            }
 
         case .failure(let error):
 
@@ -622,9 +690,21 @@ extension ViewController:
 
 private final class EFIDetailViewController: NSViewController {
 
-    private let efi: EFIInfo
+    private var efi: EFIInfo
 
     private let mountPathField = NSTextField(
+        labelWithString: ""
+    )
+
+    private let availableValueLabel = NSTextField(
+        labelWithString: ""
+    )
+
+    private let statusValueLabel = NSTextField(
+        labelWithString: ""
+    )
+
+    private let trashValueLabel = NSTextField(
         labelWithString: ""
     )
 
@@ -643,13 +723,60 @@ private final class EFIDetailViewController: NSViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    func updateEFI(_ newEFI: EFIInfo) {
+
+        self.efi = newEFI
+
+        availableValueLabel.stringValue =
+            newEFI.availableSizeText
+
+        statusValueLabel.stringValue =
+            newEFI.isMounted ? "已挂载" : "未挂载"
+
+        mountPathField.stringValue =
+            newEFI.mountPoint ?? "未挂载"
+
+        trashValueLabel.stringValue =
+            newEFI.isMounted ? "计算中…" : "未挂载"
+
+        guard
+            newEFI.isMounted,
+            let mountPoint = newEFI.mountPoint,
+            !mountPoint.isEmpty
+        else {
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+
+            let trashSize =
+                EFIManager.shared.getTrashSize(mountPoint)
+
+            let trashText =
+                ByteCountFormatter.string(
+                    fromByteCount: Int64(trashSize),
+                    countStyle: .file
+                )
+
+            DispatchQueue.main.async {
+
+                guard self.efi.identifier == newEFI.identifier else {
+                    return
+                }
+
+                self.trashValueLabel.stringValue =
+                    trashText
+            }
+        }
+    }
+
     override func loadView() {
         view = NSView(
             frame: NSRect(
                 x: 0,
                 y: 0,
                 width: 360,
-                height: 380
+                height: 420
             )
         )
     }
@@ -661,6 +788,15 @@ private final class EFIDetailViewController: NSViewController {
         // 上半区域：EFI 基本信息
         // 整个区域独立，以窗口中心为基准水平居中
         // ============================================================
+
+        availableValueLabel.stringValue =
+            efi.availableSizeText
+
+        statusValueLabel.stringValue =
+            efi.isMounted ? "已挂载" : "未挂载"
+
+        trashValueLabel.stringValue =
+            efi.isMounted ? "计算中…" : "未挂载"
 
         let windowWidth: CGFloat = 360
 
@@ -684,13 +820,15 @@ private final class EFIDetailViewController: NSViewController {
             ("EFI分区", efi.identifier),
             ("磁盘容量", efi.diskSizeText),
             ("EFI容量", efi.sizeText),
+            ("EFI可用", efi.availableSizeText),
             ("分区类型", efi.partitionTypeText),
-            ("状态", efi.statusText)
+            ("状态", efi.isMounted ? "已挂载" : "未挂载"),
+            ("废纸篓占用", "计算中…")
         ]
 
-        let firstRowY: CGFloat = 332
+        let firstRowY: CGFloat = 365
         let rowHeight: CGFloat = 24
-        let rowSpacing: CGFloat = 6
+        let rowSpacing: CGFloat = 3
 
         for (index, row) in rows.enumerated() {
 
@@ -733,9 +871,67 @@ private final class EFIDetailViewController: NSViewController {
 
             view.addSubview(label)
             view.addSubview(value)
+
+            if row.0 == "EFI可用" {
+                availableValueLabel.frame = value.frame
+                availableValueLabel.alignment = .left
+                availableValueLabel.lineBreakMode =
+                    .byTruncatingTail
+                view.addSubview(availableValueLabel)
+                value.removeFromSuperview()
+            }
+
+            if row.0 == "状态" {
+                statusValueLabel.frame = value.frame
+                statusValueLabel.alignment = .left
+                statusValueLabel.lineBreakMode =
+                    .byTruncatingTail
+                view.addSubview(statusValueLabel)
+                value.removeFromSuperview()
+            }
+
+
+            if row.0 == "废纸篓占用" {
+                trashValueLabel.frame = value.frame
+                trashValueLabel.alignment = .left
+                trashValueLabel.lineBreakMode =
+                    .byTruncatingTail
+                view.addSubview(trashValueLabel)
+                value.removeFromSuperview()
+            }
+
         }
 
         // ============================================================
+        // 后台计算 EFI 废纸篓占用
+        // 只在打开详情窗口时计算一次
+        // ============================================================
+
+        if efi.isMounted,
+           let mountPoint = efi.mountPoint,
+           !mountPoint.isEmpty {
+
+            DispatchQueue.global(qos: .utility).async {
+
+                let trashSize =
+                    EFIManager.shared.getTrashSize(mountPoint)
+
+                let trashText =
+                    ByteCountFormatter.string(
+                        fromByteCount: Int64(trashSize),
+                        countStyle: .file
+                    )
+
+                DispatchQueue.main.async {
+                    self.trashValueLabel.stringValue = trashText
+                }
+            }
+
+        } else {
+
+            trashValueLabel.stringValue = "未挂载"
+        }
+
         // 下半区域：挂载路径
         // 与上半区域完全独立
         // ============================================================
@@ -752,7 +948,7 @@ private final class EFIDetailViewController: NSViewController {
         let pathGroupX =
             (windowWidth - pathGroupWidth) / 2
 
-        let pathY: CGFloat = 76
+        let pathY: CGFloat = 68
 
         let pathTitle = NSTextField(
             labelWithString: "挂载路径"
@@ -801,7 +997,7 @@ private final class EFIDetailViewController: NSViewController {
 
         copyButton.frame = NSRect(
             x: (windowWidth - buttonWidth) / 2,
-            y: 32,
+            y: 28,
             width: buttonWidth,
             height: buttonHeight
         )
@@ -812,6 +1008,7 @@ private final class EFIDetailViewController: NSViewController {
 
         view.addSubview(copyButton)
     }
+
 
     @objc
     private func copyMountPath() {

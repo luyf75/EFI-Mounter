@@ -67,6 +67,48 @@ struct EFIInfo {
         )
     }
 
+    var availableSizeText: String {
+
+        guard let mountPoint,
+              isMounted,
+              !mountPoint.isEmpty
+        else {
+            return "未挂载"
+        }
+
+        guard let attributes =
+            try? FileManager.default.attributesOfFileSystem(
+                forPath: mountPoint
+            ),
+            let freeSize =
+                attributes[.systemFreeSize] as? NSNumber
+        else {
+            return "未知"
+        }
+
+        let bytes = freeSize.uint64Value
+
+        let gb =
+            Double(bytes) /
+            1_000_000_000.0
+
+        if gb >= 1.0 {
+            return String(
+                format: "%.1f GB",
+                gb
+            )
+        }
+
+        let mb =
+            Double(bytes) /
+            1_000_000.0
+
+        return String(
+            format: "%.0f MB",
+            mb
+        )
+    }
+
     var statusText: String {
 
         if let path = mountPoint,
