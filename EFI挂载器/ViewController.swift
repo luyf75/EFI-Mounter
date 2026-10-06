@@ -448,7 +448,25 @@ final class ViewController: NSViewController {
         controller.showWindow(nil)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+
+        // 窗口已经显示后，再后台获取最新 EFI 数据
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            let latestList = EFIManager.shared.scanEFI()
+
+            guard let latestEFI = latestList.first(
+                where: { $0.identifier == efi.identifier }
+            )
+            else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                detailViewController.updateEFI(latestEFI)
+            }
+        }
     }
+
 }
 
 extension ViewController:
@@ -641,7 +659,9 @@ extension ViewController:
 
 private final class EFIDetailViewController: NSViewController {
 
-    private let efi: EFIInfo
+    private var efi: EFIInfo
+
+    private var valueFields: [NSTextField] = []
 
     private let mountPathField = NSTextField(
         labelWithString: ""
@@ -704,7 +724,7 @@ private final class EFIDetailViewController: NSViewController {
             ("磁盘容量", efi.diskSizeText),
             ("EFI容量", efi.sizeText),
             ("分区类型", efi.partitionTypeText),
-            ("状态", efi.statusText)
+            ("状态", efi.isMounted ? "已挂载" : "未挂载")
         ]
 
         let firstRowY: CGFloat = 332
@@ -738,6 +758,8 @@ private final class EFIDetailViewController: NSViewController {
             let value = NSTextField(
                 labelWithString: row.1
             )
+
+            valueFields.append(value)
 
             value.alignment = .left
             value.lineBreakMode =
@@ -830,6 +852,37 @@ private final class EFIDetailViewController: NSViewController {
             !(efi.mountPoint?.isEmpty ?? true)
 
         view.addSubview(copyButton)
+    }
+
+    func updateEFI(_ updatedEFI: EFIInfo) {
+
+        efi = updatedEFI
+
+        guard valueFields.count == 8 else {
+            return
+        }
+
+        let values = [
+            efi.typeName,
+            efi.diskName,
+            efi.wholeDisk,
+            efi.identifier,
+            efi.diskSizeText,
+            efi.sizeText,
+            efi.partitionTypeText,
+            efi.isMounted ? "已挂载" : "未挂载"
+        ]
+
+        for (index, value) in values.enumerated() {
+            valueFields[index].stringValue = value
+        }
+
+        mountPathField.stringValue =
+            efi.mountPoint ?? "未挂载"
+
+        copyButton.isEnabled =
+            efi.mountPoint != nil &&
+            !(efi.mountPoint?.isEmpty ?? true)
     }
 
     @objc
