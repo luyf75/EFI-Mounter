@@ -578,45 +578,64 @@ extension ViewController:
 
         let efi = efiList[row]
 
-        if efi.isMounted {
+        // 操作过程中立即禁用当前按钮，避免重复操作
+        sender.isEnabled = false
 
-            switch EFIManager.shared.unmount(efi) {
+        DispatchQueue.global(qos: .userInitiated).async {
 
-            case .success:
+            if efi.isMounted {
 
-                refresh()
+                let result = EFIManager.shared.unmount(efi)
 
-            case .failure(let error):
+                DispatchQueue.main.async {
 
-                showAlert(
-                    title: "EFI 推出失败",
-                    message: error.localizedDescription
-                )
+                    sender.isEnabled = true
+
+                    switch result {
+
+                    case .success:
+
+                        self.refresh()
+
+                    case .failure(let error):
+
+                        self.showAlert(
+                            title: "EFI 推出失败",
+                            message: error.localizedDescription
+                        )
+                    }
+                }
+
+                return
             }
 
-            return
-        }
+            let result = EFIManager.shared.mount(efi)
 
-        switch EFIManager.shared.mount(efi) {
+            DispatchQueue.main.async {
 
-        case .success(let path):
+                sender.isEnabled = true
 
-            refresh()
+                switch result {
 
-            NSWorkspace.shared.open(
-                URL(fileURLWithPath: path)
-            )
+                case .success(let path):
 
-        case .failure(let error):
+                    self.refresh()
 
-            showAlert(
-                title: "EFI 挂载失败",
-                message: error.localizedDescription
-            )
+                    NSWorkspace.shared.open(
+                        URL(fileURLWithPath: path)
+                    )
+
+                case .failure(let error):
+
+                    self.showAlert(
+                        title: "EFI 挂载失败",
+                        message: error.localizedDescription
+                    )
+                }
+            }
         }
     }
 }
-
 
 // MARK: - EFI Detail Window
 
